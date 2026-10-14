@@ -1,4 +1,5 @@
 import 'package:ecommerceapp1/HomePage.dart';
+import 'package:ecommerceapp1/Register.dart';
 import 'package:flutter/material.dart';
  
 void main(){
@@ -18,7 +19,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext con){
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Homepage(),
+      home: Register(),
     );
   }
 }
