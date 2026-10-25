@@ -1,34 +1,128 @@
+
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:ecommerceapp1/cart_controller.dart';
+import 'package:ecommerceapp1/cart_page.dart';
+import 'package:ecommerceapp1/cart_icon.dart';
+import 'package:ecommerceapp1/homepage.dart';
 
 class itemdetails extends StatefulWidget {
-  final data;
-  const itemdetails({super.key, this.data});
+  final Map<String, dynamic> data;
+
+  const itemdetails({
+    super.key,
+    required this.data,
+  });
 
   @override
   State<itemdetails> createState() => _itemdetailsState();
 }
 
 class _itemdetailsState extends State<itemdetails> {
+  final CartController cart = Get.find<CartController>();
+
+  void openCart() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CartPage(),
+      ),
+    );
+  }
+
+  void goHome() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const Homepage(),
+      ),
+      (route) => route.isFirst,
+    );
+  }
+
+  void addProductToCart() {
+    final product = widget.data;
+
+    final priceText = product['price'].toString();
+
+    final price = double.tryParse(
+          priceText.replaceAll(RegExp(r'[^0-9.]'), ''),
+        ) ??
+        0.0;
+
+    cart.addToCart(
+      CartItem(
+        id: product['id']?.toString() ??
+            '${product['title']}_${product['image']}',
+        name: product['title'].toString(),
+        image: product['image'].toString(),
+        price: price,
+      ),
+    );
+
+    openCart();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFFFF7FF),
+
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
         iconSize: 30,
         selectedItemColor: Colors.black,
-        unselectedFontSize: 0,
-        
+        unselectedItemColor: Colors.grey,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        type: BottomNavigationBarType.fixed,
+
+        onTap: (index) {
+          if (index == 0) {
+            goHome();
+          } else if (index == 1) {
+            openCart();
+          }
+        },
+
         items: [
-        BottomNavigationBarItem(icon: Icon(Icons.home_outlined),label: "*"),
-        BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined),label: "*"),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline),label: "*"),
-      ]),
-      endDrawer: Drawer(),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: "Home",
+          ),
+          BottomNavigationBarItem(
+            icon: CartIcon(),
+            label: "Cart",
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: "Profile",
+          ),
+        ],
+      ),
+
+      // AppBar without Drawer
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        backgroundColor: Colors.grey[200],
+        elevation: 0,
+        iconTheme: IconThemeData(
+          color: Colors.grey[800],
+        ),
+        centerTitle: true,
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.shop_two_outlined, color: Colors.black),
-            Text(" Zain ", style: TextStyle(fontWeight: FontWeight.bold)),
+            Icon(
+              Icons.shop_two_outlined,
+              color: Colors.black,
+            ),
+            Text(
+              " Zain ",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
             Text(
               "Shop",
               style: TextStyle(
@@ -38,105 +132,70 @@ class _itemdetailsState extends State<itemdetails> {
             ),
           ],
         ),
-        iconTheme: IconThemeData(color: Colors.grey[800]),
-        backgroundColor: Colors.grey[200],
-        elevation: 0.0,
       ),
-      body: ListView(
-        children: [
-          Image.asset(widget.data['image']),
-          Container(
-            child: Text(
-              widget.data['title'],
+
+      body: SafeArea(
+        child: ListView(
+          children: [
+            const SizedBox(height: 20),
+
+            Image.asset(
+              widget.data['image'].toString(),
+              height: 370,
+              fit: BoxFit.contain,
+            ),
+
+            const SizedBox(height: 25),
+
+            Text(
+              widget.data['title'].toString(),
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
-                fontSize: 20,
               ),
             ),
-          ),
-          Container(
-            child: Text(
-              widget.data['subtitle'],
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[500],
-                fontSize: 14,
-              ),
-            ),
-          ),
 
-          Container(
-            margin: EdgeInsets.only(bottom: 20, top: 10),
-            child: Text(
-              widget.data['price'],
+            const SizedBox(height: 15),
+
+            Text(
+              widget.data['price'].toString(),
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.orange,
-                fontSize: 18,
               ),
             ),
-          ),
 
-          Container(
-            margin: EdgeInsets.only(bottom: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Color : ", style: TextStyle(color: Colors.grey[500])),
-                SizedBox(width: 6),
-                Container(
-                  height: 20,
-                  width: 20,
-                  decoration: BoxDecoration(
-                    color: Colors.grey,
-                    borderRadius: BorderRadius.circular(30),
+            const SizedBox(height: 35),
+
+            Container(
+              margin: const EdgeInsets.symmetric(
+                horizontal: 60,
+                vertical: 10,
+              ),
+              child: SizedBox(
+                height: 45,
+                child: ElevatedButton(
+                  onPressed: addProductToCart,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  child: const Text(
+                    "Add To Cart",
+                    style: TextStyle(fontSize: 16),
                   ),
                 ),
-
-                Text(" Gray"),
-                SizedBox(width: 20),
-                Container(
-                  height: 20,
-                  width: 20,
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.orange, width: 1),
-                  ),
-                ),
-
-                Text(" Black"),
-              ],
-            ),
-          ),
-          Container(
-            child: Text(
-              " Size :    39    40    41    42    43",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[500]),
-            ),
-          ),
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 60,vertical: 10),
-            padding: EdgeInsets.all(10),
-            child: MaterialButton(
-              color: Colors.black,
-              textColor: Colors.white,
-              
-              onPressed: () {},
-              child: Text(
-                
-                "Add To Cart",
-                textAlign: TextAlign.center,
-                style: TextStyle(),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

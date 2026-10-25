@@ -1,6 +1,9 @@
-import 'package:ecommerceapp1/details.dart';
+
 import 'package:flutter/material.dart';
+import 'package:ecommerceapp1/details.dart';
 import 'package:ecommerceapp1/login.dart';
+import 'package:ecommerceapp1/cart_page.dart';
+import 'package:ecommerceapp1/cart_icon.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -10,197 +13,261 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomePageState extends State<Homepage> {
-  List categories = [
-    {"iconname": Icons.laptop, "title": "Laptop"},
-    {"iconname": Icons.phone_android_rounded, "title": "Phone"},
-    {"iconname": Icons.pedal_bike, "title": "Bikes"},
-    {"iconname": Icons.card_giftcard, "title": "Gifts"},
-    {"iconname": Icons.table_restaurant, "title": "Tables"},
-  ];
-  List Items = [
+  final TextEditingController searchController = TextEditingController();
+
+  String searchQuery = '';
+
+  final List<Map<String, dynamic>> items = [
     {
+      "id": "headphone1",
       "image": "images/headphone.png",
       "title": "HeadPhone",
       "subtitle": "Description",
       "price": "350\$",
     },
     {
+      "id": "watch1",
       "image": "images/smart.png",
       "title": "Smart Watch",
-      "subtitle": " 12 hours battery",
+      "subtitle": "12 hours battery",
       "price": "150\$",
     },
     {
+      "id": "laptop1",
       "image": "images/headphone.png",
       "title": "Labtop",
       "subtitle": "Description",
       "price": "350\$",
     },
     {
+      "id": "watch2",
       "image": "images/smart.png",
       "title": "Smart Watch",
       "subtitle": "Description 12 hours battery",
       "price": "150\$",
     },
   ];
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final filteredItems = items.where((product) {
+      final title = product['title'].toString().toLowerCase();
+      return title.contains(searchQuery.toLowerCase().trim());
+    }).toList();
+
     return Scaffold(
+      backgroundColor: const Color(0xFFFFF7FF),
+
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
         iconSize: 25,
         selectedItemColor: Colors.black,
-        unselectedFontSize: 0,
+        unselectedItemColor: Colors.grey,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        type: BottomNavigationBarType.fixed,
+
+        onTap: (index) {
+          if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CartPage(),
+              ),
+            );
+          }
+        },
 
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: "*"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_bag_outlined),
-            label: "*",
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: "Home",
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "*"),
+          BottomNavigationBarItem(
+            icon: CartIcon(),
+            label: "Cart",
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: "Profile",
+          ),
         ],
       ),
-      body: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        child: ListView(
-          children: [
-            Align(
-              alignment: Alignment.topLeft,
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back, size: 28),
-                onPressed: () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                    (route) => false,
-                  );
-                },
-              ),
-            ),
 
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.search_rounded),
-                      hintText:
-                          "Search", // ✅ تم تصحيحها------------------------------------------------------search bar---------------------------------------
-                      border: InputBorder.none,
-                      fillColor: Colors.grey[200],
-                      filled: true,
-                    ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 20,
+          ),
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.topLeft,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    size: 28,
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 10),
-                  child: Icon(Icons.menu, size: 40),
-                ),
-              ],
-            ),
-            SizedBox(height: 26),
-            Text(
-              "Categories", //------------------------------------------------------------------------categories--------------------------------------------------------------
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
-            ),
-            SizedBox(height: 10),
-            Container(
-              height: 92,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                itemBuilder: (context, i) {
-                  return Container(
-                    margin: EdgeInsets.only(right: 10),
-                    child: Column(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          child: Icon(categories[i]['iconname'], size: 32),
-                          padding: EdgeInsets.all(15),
-                        ),
-                        Text(
-                          categories[i]['title'],
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "Best Selling", //------------------------------------------------------------------------------------Best Selling-------------------------------------------------
-              style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            GridView.builder(
-              itemCount: Items.length,
-              shrinkWrap: true, // ✅ مهم جداً
-              physics: NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisExtent: 200,
-              ),
-              itemBuilder: (context, i) {
-                return InkWell(
-                  onTap: () {
-                    Navigator.of(context).push(
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
                       MaterialPageRoute(
-                        builder: (context) => itemdetails(data: Items[i]),
+                        builder: (context) => const LoginPage(),
                       ),
+                      (route) => false,
                     );
                   },
-                  child: Card(
-                    surfaceTintColor: Colors.transparent,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          color: Colors.grey[10],
-                          child: Image.asset(
-                            Items[i]['image'], //-----------------------------------------------------------headphone-------------------------------------------
-                            height: 92,
-                          ),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 10,
-                          ),
-                        ),
-                        Text(
-                          Items[i]['title'],
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          Items[i]['subtitle'],
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[400],
-                          ),
-                        ),
-                        Container(height: 0),
-                        Text(
-                          Items[i]['price'],
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.amber[700],
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // Search Bar
+              TextField(
+                controller: searchController,
+                onChanged: (value) {
+                  setState(() {
+                    searchQuery = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: "Search products...",
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    color: Colors.black54,
+                  ),
+                  suffixIcon: searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () {
+                            searchController.clear();
+                            setState(() {
+                              searchQuery = '';
+                            });
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 15,
+                    horizontal: 12,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 25),
+
+              // Show Best Selling only when not searching
+              if (searchQuery.trim().isEmpty) ...[
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Best Selling",
+                    style: TextStyle(
+                      fontSize: 23,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                );
-              },
-            ),
-          ],
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // Products
+              Expanded(
+                child: filteredItems.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No products found',
+                          style: TextStyle(
+                            fontSize: 17,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      )
+                    : GridView.builder(
+                        itemCount: filteredItems.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisExtent: 200,
+                          crossAxisSpacing: 5,
+                          mainAxisSpacing: 5,
+                        ),
+                        itemBuilder: (context, i) {
+                          final product = filteredItems[i];
+
+                          return InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => itemdetails(
+                                    data: product,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Card(
+                              surfaceTintColor: Colors.transparent,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: double.infinity,
+                                    height: 112,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 10,
+                                    ),
+                                    child: Image.asset(
+                                      product['image'],
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+
+                                  Text(
+                                    product['title'],
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+
+                                  Text(
+                                    product['subtitle'],
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[400],
+                                    ),
+                                  ),
+
+                                  Text(
+                                    product['price'],
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.amber[700],
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
