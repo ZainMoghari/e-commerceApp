@@ -1,6 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'login.dart';
 import 'package:ecommerceapp1/MyTextField.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -12,35 +13,100 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
+  final addressController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmController = TextEditingController();
 
   bool hidePassword = true;
   bool hideConfirm = true;
+  bool isLoading = false;
 
   @override
   void dispose() {
     nameController.dispose();
     emailController.dispose();
+    addressController.dispose();
     passwordController.dispose();
     confirmController.dispose();
     super.dispose();
   }
 
-  void register() {
-    if (nameController.text.trim().isEmpty ||
-        emailController.text.trim().isEmpty ||
-        passwordController.text.isEmpty ||
-        confirmController.text.isEmpty) {
+  Future<void> register() async {
+    String name = nameController.text.trim();
+    String email = emailController.text.trim().toLowerCase();
+    String address = addressController.text.trim();
+    String password = passwordController.text;
+    String confirmPassword = confirmController.text;
+
+    if (name.isEmpty ||
+        email.isEmpty ||
+        address.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
       showMessage("Please fill all fields");
-    } else if (!emailController.text.contains("@")) {
+      return;
+    }
+
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
       showMessage("Please enter a valid email");
-    } else if (passwordController.text.length < 6) {
+      return;
+    }
+
+    if (password.length < 6) {
       showMessage("Password must be at least 6 characters");
-    } else if (passwordController.text != confirmController.text) {
+      return;
+    }
+
+    if (password != confirmPassword) {
       showMessage("Passwords do not match");
-    } else {
-      showMessage("Registration details are valid");
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      String savedData = prefs.getString('registered_accounts') ?? '[]';
+      List<dynamic> accounts = jsonDecode(savedData);
+
+      bool emailExists = accounts.any((account) => account['email'] == email);
+
+      if (emailExists) {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+          showMessage("This email is already registered");
+        }
+        return;
+      }
+
+      accounts.add({
+        'name': name,
+        'email': email,
+        'address': address,
+        'password': password,
+      });
+
+      await prefs.setString('registered_accounts', jsonEncode(accounts));
+
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+      });
+
+      Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        showMessage("Registration failed. Please try again");
+      }
     }
   }
 
@@ -66,9 +132,7 @@ class _RegisterState extends State<Register> {
                   size: 75,
                   color: Colors.black,
                 ),
-
                 const SizedBox(height: 20),
-
                 const Text(
                   "Create Account",
                   textAlign: TextAlign.center,
@@ -78,98 +142,96 @@ class _RegisterState extends State<Register> {
                     color: Colors.black,
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
                 const Text(
                   "Register to get started",
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.grey),
                 ),
-
                 const SizedBox(height: 35),
 
                 MyTextField(
                   hint: "Enter your full name",
                   controller: nameController,
                 ),
-
                 const SizedBox(height: 15),
 
                 MyTextField(
                   hint: "Enter your email",
                   controller: emailController,
                 ),
+                const SizedBox(height: 15),
 
+                TextField(
+                  controller: addressController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: "Address",
+                    hintText: "Enter your full address",
+                    prefixIcon: Icon(Icons.location_on_outlined),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
                 const SizedBox(height: 15),
 
                 TextField(
                   controller: passwordController,
                   obscureText: hidePassword,
-                  decoration:
-                      const InputDecoration(
-                        labelText: "Password",
-                        prefixIcon: Icon(Icons.lock),
-                        border: OutlineInputBorder(),
-                      ).copyWith(
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            hidePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              hidePassword = !hidePassword;
-                            });
-                          },
-                        ),
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    prefixIcon: const Icon(Icons.lock),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        hidePassword ? Icons.visibility_off : Icons.visibility,
                       ),
+                      onPressed: () {
+                        setState(() {
+                          hidePassword = !hidePassword;
+                        });
+                      },
+                    ),
+                  ),
                 ),
-
                 const SizedBox(height: 15),
 
                 TextField(
                   controller: confirmController,
                   obscureText: hideConfirm,
-                  decoration:
-                      const InputDecoration(
-                        labelText: "Confirm Password",
-                        prefixIcon: Icon(Icons.lock_outline),
-                        border: OutlineInputBorder(),
-                      ).copyWith(
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            hideConfirm
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              hideConfirm = !hideConfirm;
-                            });
-                          },
-                        ),
+                  decoration: InputDecoration(
+                    labelText: "Confirm Password",
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        hideConfirm ? Icons.visibility_off : Icons.visibility,
                       ),
+                      onPressed: () {
+                        setState(() {
+                          hideConfirm = !hideConfirm;
+                        });
+                      },
+                    ),
+                  ),
                 ),
-
                 const SizedBox(height: 25),
 
                 SizedBox(
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: register,
+                    onPressed: isLoading ? null : register,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text(
-                      "REGISTER",
-                      style: TextStyle(fontSize: 18),
-                    ),
+                    child: isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            "REGISTER",
+                            style: TextStyle(fontSize: 18),
+                          ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
 
                 Row(
@@ -178,12 +240,7 @@ class _RegisterState extends State<Register> {
                     const Text("Already have an account?"),
                     TextButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginPage(),
-                          ),
-                        );
+                        Navigator.pop(context);
                       },
                       child: const Text(
                         "Login",

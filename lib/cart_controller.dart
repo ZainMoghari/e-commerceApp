@@ -1,4 +1,3 @@
-
 import 'package:get/get.dart';
 
 class CartItem {
@@ -15,34 +14,40 @@ class CartItem {
     required this.price,
     this.quantity = 1,
   });
+
+  CartItem copy() {
+    return CartItem(
+      id: id,
+      name: name,
+      image: image,
+      price: price,
+      quantity: quantity,
+    );
+  }
 }
 
 class CartController extends GetxController {
   final items = <CartItem>[].obs;
 
-  int get totalItems =>
-      items.fold(0, (sum, item) => sum + item.quantity);
+  int get totalItems => items.fold(0, (sum, item) => sum + item.quantity);
 
-  double get totalPrice => items.fold(
-        0.0,
-        (sum, item) => sum + item.price * item.quantity,
-      );
+  double get totalPrice =>
+      items.fold(0.0, (sum, item) => sum + item.price * item.quantity);
 
   void addToCart(CartItem product) {
-    final index = items.indexWhere(
-      (item) => item.id == product.id,
-    );
+    final index = items.indexWhere((item) => item.id == product.id);
 
     if (index != -1) {
       items[index].quantity++;
       items.refresh();
     } else {
-      items.add(product);
+      items.add(product.copy());
     }
   }
 
   void increase(String id) {
     final index = items.indexWhere((item) => item.id == id);
+
     if (index == -1) return;
 
     items[index].quantity++;
@@ -51,6 +56,7 @@ class CartController extends GetxController {
 
   void decrease(String id) {
     final index = items.indexWhere((item) => item.id == id);
+
     if (index == -1) return;
 
     if (items[index].quantity > 1) {

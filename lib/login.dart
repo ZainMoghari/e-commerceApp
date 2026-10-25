@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:ecommerceapp1/HomePage.dart';
 import 'package:ecommerceapp1/Register.dart';
 import 'package:ecommerceapp1/MyTextField.dart';
+import 'package:ecommerceapp1/admin_dashboard.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,6 +16,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool hidePassword = true;
+  bool isLoading = false;
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -23,17 +28,80 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void login() {
-    if (emailController.text.trim().isEmpty ||
-        passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your email and password')),
+  void showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> login() async {
+    final email = emailController.text.trim().toLowerCase();
+    final password = passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      showMessage('Please enter your email and password');
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Check the admin account first.
+      if (email == 'admin@example.com' && password == 'admin123') {
+        await prefs.setString('logged_in_email', email);
+
+        if (!mounted) return;
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminDashboard()),
+          (route) => false,
+        );
+
+        return;
+      }
+
+      // If it is not the admin, check customer accounts.
+      final savedData = prefs.getString('registered_accounts') ?? '[]';
+
+      final List<dynamic> accounts = jsonDecode(savedData);
+
+      final matchingAccounts = accounts.where(
+        (account) =>
+            account['email'] == email && account['password'] == password,
       );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const Homepage()),
-      );
+
+      if (!mounted) return;
+
+      if (matchingAccounts.isNotEmpty) {
+        await prefs.setString('logged_in_email', email);
+
+        if (!mounted) return;
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const Homepage()),
+          (route) => false,
+        );
+      } else if (accounts.isEmpty) {
+        showMessage('Please create an account first');
+      } else {
+        showMessage('Incorrect email or password');
+      }
+    } catch (e) {
+      if (mounted) {
+        showMessage('Something went wrong. Please try again');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -136,24 +204,11 @@ class _LoginPageState extends State<LoginPage> {
                     borderSide: const BorderSide(color: Colors.black),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 12),
-
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    // Forgot Password will be connected later.
-                  },
-                  child: const Text(
-                    'Forgot Password?',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+                onSubmitted: (_) {
+                  if (!isLoading) {
+                    login();
+                  }
+                },
               ),
 
               const SizedBox(height: 20),
@@ -162,7 +217,7 @@ class _LoginPageState extends State<LoginPage> {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: login,
+                  onPressed: isLoading ? null : login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.white,
@@ -170,10 +225,22 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text(
-                    'Login',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          'Login',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
 
@@ -186,7 +253,6 @@ class _LoginPageState extends State<LoginPage> {
                     "Don't have an account? ",
                     style: TextStyle(color: Colors.grey, fontSize: 14),
                   ),
-
                   TextButton(
                     onPressed: () {
                       Navigator.push(
