@@ -1,25 +1,18 @@
-import 'package:ecommerceapp1/HomePage.dart';
-import 'package:ecommerceapp1/Register.dart';
 import 'package:flutter/material.dart';
- 
-void main(){
-  runApp(MyApp());
+import 'package:ecommerceapp1/login.dart';
+
+void main() {
+  runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  @override
-  State<StatefulWidget> createState() => _MyAppState();
-        
-  
-}
 
-class _MyAppState extends State<MyApp> {
   @override
-  Widget build(BuildContext con){
+  Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Register(),
+      home: SafeArea(child: const LoginPage()),
     );
   }
 }

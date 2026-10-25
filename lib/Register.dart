@@ -1,5 +1,6 @@
-import 'package:ecommerceapp1/details.dart';
 import 'package:flutter/material.dart';
+import 'login.dart';
+import 'package:ecommerceapp1/MyTextField.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -9,7 +10,7 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
-    final nameController = TextEditingController();
+  final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmController = TextEditingController();
@@ -44,10 +45,11 @@ class _RegisterState extends State<Register> {
   }
 
   void showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,6 +75,7 @@ class _RegisterState extends State<Register> {
                   style: TextStyle(
                     fontSize: 30,
                     fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
                 ),
 
@@ -86,25 +89,16 @@ class _RegisterState extends State<Register> {
 
                 const SizedBox(height: 35),
 
-                TextField(
+                MyTextField(
+                  hint: "Enter your full name",
                   controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: "Full Name",
-                    prefixIcon: Icon(Icons.person),
-                    border: OutlineInputBorder(),
-                  ),
                 ),
 
                 const SizedBox(height: 15),
 
-                TextField(
+                MyTextField(
+                  hint: "Enter your email",
                   controller: emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: "Email",
-                    prefixIcon: Icon(Icons.email),
-                    border: OutlineInputBorder(),
-                  ),
                 ),
 
                 const SizedBox(height: 15),
@@ -112,23 +106,25 @@ class _RegisterState extends State<Register> {
                 TextField(
                   controller: passwordController,
                   obscureText: hidePassword,
-                  decoration: InputDecoration(
-                    labelText: "Password",
-                    prefixIcon: const Icon(Icons.lock),
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        hidePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
+                  decoration:
+                      const InputDecoration(
+                        labelText: "Password",
+                        prefixIcon: Icon(Icons.lock),
+                        border: OutlineInputBorder(),
+                      ).copyWith(
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            hidePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              hidePassword = !hidePassword;
+                            });
+                          },
+                        ),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          hidePassword = !hidePassword;
-                        });
-                      },
-                    ),
-                  ),
                 ),
 
                 const SizedBox(height: 15),
@@ -136,23 +132,25 @@ class _RegisterState extends State<Register> {
                 TextField(
                   controller: confirmController,
                   obscureText: hideConfirm,
-                  decoration: InputDecoration(
-                    labelText: "Confirm Password",
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        hideConfirm
-                            ? Icons.visibility_off
-                            : Icons.visibility,
+                  decoration:
+                      const InputDecoration(
+                        labelText: "Confirm Password",
+                        prefixIcon: Icon(Icons.lock_outline),
+                        border: OutlineInputBorder(),
+                      ).copyWith(
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            hideConfirm
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              hideConfirm = !hideConfirm;
+                            });
+                          },
+                        ),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          hideConfirm = !hideConfirm;
-                        });
-                      },
-                    ),
-                  ),
                 ),
 
                 const SizedBox(height: 25),
@@ -180,9 +178,17 @@ class _RegisterState extends State<Register> {
                     const Text("Already have an account?"),
                     TextButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginPage(),
+                          ),
+                        );
                       },
-                      child: const Text("Login"),
+                      child: const Text(
+                        "Login",
+                        style: TextStyle(color: Colors.black),
+                      ),
                     ),
                   ],
                 ),
